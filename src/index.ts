@@ -1,18 +1,51 @@
-/**
- * Welcome to Cloudflare Workers! This is your first worker.
- *
- * - Run `npm run dev` in your terminal to start a development server
- * - Open a browser tab at http://localhost:8787/ to see your worker in action
- * - Run `npm run deploy` to publish your worker
- *
- * Bind resources to your worker in `wrangler.jsonc`. After adding bindings, a type definition for the
- * `Env` object can be regenerated with `npm run cf-typegen`.
- *
- * Learn more at https://developers.cloudflare.com/workers/
- */
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
+import { S3Client, GetObjectCommand } from '@aws-sdk/client-s3';
 
 export default {
 	async fetch(request, env, ctx): Promise<Response> {
-		return new Response('Hello World!');
+		const url = new URL(request.url);
+
+		// Serve presigned URL redirect for /api/download
+		if (url.pathname === '/api/download') {
+			const S3 = new S3Client({
+				region: 'auto',
+				endpoint: `https://${env.CLOUDFLARE_ACCOUNT_ID}.r2.cloudflarestorage.com`,
+				credentials: {
+					accessKeyId: env.R2_ACCESS_KEY_ID,
+					secretAccessKey: env.R2_ACCESS_KEY_SECRET,
+				},
+			});
+
+			const bucket = 'testing';
+			const fileName = 'test.txt';
+
+			const presignedUrl = await getSignedUrl(
+				S3,
+				new GetObjectCommand({
+					Bucket: bucket,
+					Key: fileName,
+					ResponseContentDisposition: `attachment; filename="${fileName}"`,
+				}),
+				{ expiresIn: 900 }
+			);
+
+			const headers = {
+				'Access-Control-Allow-Origin': '*',
+				'Access-Control-Allow-Methods': 'GET',
+				'Access-Control-Allow-Headers': 'Content-Type',
+			};
+
+			return new Response(null, {
+				status: 307,
+				headers: {
+					Location: presignedUrl,
+					...headers,
+				},
+			});
+		}
+
+		return new Response(null, {
+			status: 404,
+		});
 	},
 } satisfies ExportedHandler<Env>;
