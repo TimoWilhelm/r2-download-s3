@@ -47,6 +47,8 @@ Use these values along with your **Account ID** (visible on the R2 Overview page
    | `CLOUDFLARE_ACCOUNT_ID` | Your Cloudflare account ID |
    | `R2_ACCESS_KEY_ID` | R2 S3-compatible API access key ID |
    | `R2_ACCESS_KEY_SECRET` | R2 S3-compatible API secret access key |
+   | `R2_BUCKET_NAME` | Name of the R2 bucket to download from |
+   | `R2_FILE_NAME` | Object key (file name) to serve for download |
 
 3. **Run locally**
 

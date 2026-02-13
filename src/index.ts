@@ -16,8 +16,8 @@ export default {
 				},
 			});
 
-			const bucket = 'testing';
-			const fileName = 'test.txt';
+			const bucket = env.R2_BUCKET_NAME;
+			const fileName = env.R2_FILE_NAME;
 
 			const presignedUrl = await getSignedUrl(
 				S3,
